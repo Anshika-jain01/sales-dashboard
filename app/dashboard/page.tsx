@@ -6,6 +6,9 @@ import {
   Line,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -22,11 +25,33 @@ const data = [
   { month: "Jun", sales: 7000 },
 ];
 
+const COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#ef4444", "#9333ea", "#14b8a6"];
+
 export default function DashboardPage() {
   const [chartType, setChartType] = useState("line");
-  const [threshold, setThreshold] = useState(0);
+  const [threshold, setThreshold] = useState("");
+  const [filteredData, setFilteredData] = useState(data);
 
-  const filteredData = data.filter((item) => item.sales >= threshold);
+  // FILTER FUNCTION
+  const handleFilter = () => {
+    if (threshold === "") {
+      setFilteredData(data);
+      return;
+    }
+
+    const value = Number(threshold);
+
+    const result = data.filter((item) => item.sales >= value);
+
+    setFilteredData(result);
+  };
+
+  // RESET FUNCTION
+  const handleReset = () => {
+    setThreshold("");
+    setFilteredData(data);
+    setChartType("line");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
@@ -50,14 +75,23 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Controls Section */}
-      <div className="flex gap-4 mb-6">
+      {/* Controls */}
+      <div className="flex gap-4 mb-6 flex-wrap">
+
         <input
           type="number"
           placeholder="Enter sales threshold"
+          value={threshold}
           className="border p-2 rounded-md"
-          onChange={(e) => setThreshold(Number(e.target.value))}
+          onChange={(e) => setThreshold(e.target.value)}
         />
+
+        <button
+          onClick={handleFilter}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg"
+        >
+          Filter
+        </button>
 
         <button
           onClick={() => setChartType("line")}
@@ -72,12 +106,29 @@ export default function DashboardPage() {
         >
           Bar Chart
         </button>
+
+        <button
+          onClick={() => setChartType("pie")}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg"
+        >
+          Pie Chart
+        </button>
+
+        <button
+          onClick={handleReset}
+          className="px-4 py-2 bg-gray-700 text-white rounded-lg"
+        >
+          Reset
+        </button>
+
       </div>
 
-      {/* Chart Card */}
+      {/* Charts */}
       <div className="bg-white p-6 rounded-xl shadow-md">
+
         <ResponsiveContainer width="100%" height={400}>
-          {chartType === "line" ? (
+
+          {chartType === "line" && (
             <LineChart data={filteredData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
@@ -85,7 +136,9 @@ export default function DashboardPage() {
               <Tooltip />
               <Line type="monotone" dataKey="sales" stroke="#2563eb" />
             </LineChart>
-          ) : (
+          )}
+
+          {chartType === "bar" && (
             <BarChart data={filteredData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
@@ -94,7 +147,28 @@ export default function DashboardPage() {
               <Bar dataKey="sales" fill="#16a34a" />
             </BarChart>
           )}
+
+          {chartType === "pie" && (
+            <PieChart>
+              <Pie
+                data={filteredData}
+                dataKey="sales"
+                nameKey="month"
+                cx="50%"
+                cy="50%"
+                outerRadius={120}
+                label
+              >
+                {filteredData.map((entry, index) => (
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          )}
+
         </ResponsiveContainer>
+
       </div>
     </div>
   );
